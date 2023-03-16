@@ -1,6 +1,7 @@
-import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, Quaternion  } from 'babylonjs';
+import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, Quaternion, Node, Mesh, TransformNode  } from 'babylonjs';
 import { AdvancedDynamicTexture, Button, PlanePanel, Rectangle, Slider, StackPanel, TextBlock } from 'babylonjs-gui';
 import 'babylonjs-loaders';
+import gsap, { Bounce } from 'gsap';
 
 const canvas = document.getElementById("canvas");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("Couldn't find a canvas. Aborting the demo")
@@ -8,7 +9,12 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error("Couldn't find a can
 const engine = new Engine(canvas, true, {});
 const scene = new Scene(engine);
 var gui = AdvancedDynamicTexture.CreateFullscreenUI("ui1", true, scene);
-var icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", {}, scene);;
+var icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", {}, scene);
+
+function applyBouncing(node: TransformNode, amplitude: number, duration: number) {
+	node = node.setAbsolutePosition(new Vector3(node.position.x, node.position.y + amplitude, node.position.z));
+	gsap.to(node.position, {duration: duration, y: 0, repeat: 0, yoyo: true, ease: Bounce.easeOut});
+}
 
 function prepareScene() {
 	// Camera
@@ -149,7 +155,6 @@ function prepareScene() {
 
 
 	scene.onPointerDown = ((event, object) => {
-		console.log('object: ', object);
 		const name = object.pickedMesh?.name;
 		if (name == "Plane") {
 			planeUI.isVisible = !planeUI.isVisible;
@@ -159,6 +164,10 @@ function prepareScene() {
 			icosphereUI.isVisible = !icosphereUI.isVisible;
 		}
 	});
+
+	var icosphereNode = new TransformNode("icosphereNode"); 
+    icosphere.parent = icosphereNode;
+	applyBouncing(icosphereNode, 10, 5);
 }
 
 prepareScene();

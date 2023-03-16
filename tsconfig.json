@@ -5,7 +5,7 @@
 		"baseUrl": "./",
 		"lib": ["esNext", "dom"],
 		"esModuleInterop": true,
-		"types": ["babylonjs", "babylonjs-gui"],
+		"types": ["babylonjs", "babylonjs-gui", "gsap", "gsap/Physics2DPlugin.js"],
 		"forceConsistentCasingInFileNames": true,
 		"noImplicitReturns": true,
 		"strict": true,

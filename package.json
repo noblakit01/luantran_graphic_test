@@ -16,6 +16,7 @@
 	"dependencies": {
 		"babylonjs": "5.6.1",
 		"babylonjs-loaders": "5.6.1",
-		"babylonjs-gui": "5.6.1"
+		"babylonjs-gui": "5.6.1",
+		"gsap": "3.11.4"
 	}
 }
