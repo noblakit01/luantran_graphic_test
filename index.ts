@@ -1,7 +1,6 @@
 import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, Quaternion, Node, Mesh, TransformNode  } from 'babylonjs';
 import { AdvancedDynamicTexture, Button, PlanePanel, Rectangle, Slider, StackPanel, TextBlock } from 'babylonjs-gui';
 import 'babylonjs-loaders';
-import gsap, { Bounce } from 'gsap';
 
 const canvas = document.getElementById("canvas");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("Couldn't find a canvas. Aborting the demo")
@@ -12,8 +11,24 @@ var gui = AdvancedDynamicTexture.CreateFullscreenUI("ui1", true, scene);
 var icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", {}, scene);
 
 function applyBouncing(node: TransformNode, amplitude: number, duration: number) {
-	node = node.setAbsolutePosition(new Vector3(node.position.x, node.position.y + amplitude, node.position.z));
-	gsap.to(node.position, {duration: duration, y: 0, repeat: 0, yoyo: true, ease: Bounce.easeOut});
+	const easingFunction = new BABYLON.BounceEase(4, 2);
+	easingFunction.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEOUT);
+	var animRotateRootNode = BABYLON.Animation.CreateAndStartAnimation(
+        "Bouncing Effect",
+		node,
+		"position",
+		30,
+		30 * duration,
+		new Vector3(node.position.x, node.position.y + amplitude, node.position.z),
+		new Vector3(node.position.x, node.position.y, node.position.z),
+		undefined,
+		easingFunction
+    );
+
+	if (animRotateRootNode == null) {
+		return
+	}
+	animRotateRootNode.loopAnimation = false;
 }
 
 function prepareScene() {
