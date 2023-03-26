@@ -1,6 +1,7 @@
 import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, Quaternion, Node, Mesh, TransformNode  } from 'babylonjs';
 import { AdvancedDynamicTexture, Button, PlanePanel, Rectangle, Slider, StackPanel, TextBlock } from 'babylonjs-gui';
 import 'babylonjs-loaders';
+import {MeshEditor, ControlConfig} from './MeshEditor';
 
 const canvas = document.getElementById("canvas");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("Couldn't find a canvas. Aborting the demo")
@@ -8,6 +9,7 @@ if (!(canvas instanceof HTMLCanvasElement)) throw new Error("Couldn't find a can
 const engine = new Engine(canvas, true, {});
 const scene = new Scene(engine);
 var gui = AdvancedDynamicTexture.CreateFullscreenUI("ui1", true, scene);
+const meshEditor = new MeshEditor();
 var icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", {}, scene);
 
 function applyBouncing(node: TransformNode, amplitude: number, duration: number) {
@@ -51,123 +53,88 @@ function prepareScene() {
 	cylinder.position.set(2, 0, 0);
 	cylinder.isPickable = true;
 
-	// GUI
-	const planeUI = new StackPanel("plane UI");
-	planeUI.background = "black";
-	planeUI.height = "80px";
-	planeUI.width = "120px";
-	planeUI.alpha = .5;
+	const planeControls: ControlConfig[] = [
+		{
+		  type: "width",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.x = value;
+		  },
+		},
+		{
+		  type: "height",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.y = value;
+		  },
+		},
+		{
+		  type: "depth",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.z = value;
+		  },
+		},
+	  ];
+	  
+	  const cylinderControls: ControlConfig[] = [
+		{
+		  type: "diameter",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.x = value;
+			mesh.scaling.z = value;
+		  },
+		},
+		{
+		  type: "height",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.y = value;
+		  },
+		},
+	  ];
+	  
+	  const icosphereControls: ControlConfig[] = [
+		{
+		  type: "diameter",
+		  min: 0.1,
+		  max: 2.0,
+		  callback: (mesh, value) => {
+			mesh.scaling.x = value;
+			mesh.scaling.y = value;
+			mesh.scaling.z = value;
+		  },
+		},
+		{
+		  type: "subdivisions",
+		  min: 1,
+		  max: 10,
+		  callback: (mesh, value) => {
+			icosphere.dispose();
+			icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", { subdivisions: value }, scene);
+			icosphere.position.set(-2, 0, 0);
+			icosphere.isPickable = true;
+		  },
+		},
+	  ];
 
-	const widthSlider = new Slider("width");
-	widthSlider.minimum = 0.1;
-	widthSlider.maximum = 2.0;
-	widthSlider.name = "Width:"
-	widthSlider.height = "20px";
-	widthSlider.onValueChangedObservable.add(function(value) {
-		plane.scaling.x = value;
-    });
+	const planeUI = meshEditor.createMeshUI(plane, planeControls);
+	const cylinderUI = meshEditor.createMeshUI(cylinder, cylinderControls);
+	const icosphereUI = meshEditor.createMeshUI(icosphere, icosphereControls);
 
-	var heightSlider = new Slider("height");
-	heightSlider.minimum = 0.1;
-	heightSlider.maximum = 2.0;
-	heightSlider.name = "Width:"
-	heightSlider.height = "20px";
-	heightSlider.onValueChangedObservable.add(function(value) {
-		plane.scaling.y = value;
-    });
-
-	var depthSlider = new Slider("depth");
-	depthSlider.minimum = 0.1;
-	depthSlider.maximum = 2.0;
-	depthSlider.name = "Width:"
-	depthSlider.height = "20px";
-	depthSlider.onValueChangedObservable.add(function(value) {
-		plane.scaling.z = value;
-    });
-
-    gui.addControl(planeUI);
-	planeUI.linkWithMesh(plane);
-	
-	planeUI.addControl(widthSlider);
-	planeUI.addControl(heightSlider);
-	planeUI.addControl(depthSlider);
-	planeUI.isVisible = false;
-
-	// GUI: Cylinder
-	const cylinderUI = new StackPanel("Cylinder UI");
-	cylinderUI.background = "black";
-	cylinderUI.height = "80px";
-	cylinderUI.width = "120px";
-	cylinderUI.alpha = .5;
-
-	const diameterCylinderSlider = new Slider("diameterCylinderSlider");
-	diameterCylinderSlider.minimum = 0.1;
-	diameterCylinderSlider.maximum = 2.0;
-	diameterCylinderSlider.name = "Diameter Cylinder:"
-	diameterCylinderSlider.height = "20px";
-	diameterCylinderSlider.onValueChangedObservable.add(function(value) {
-		cylinder.scaling.x = value;
-		cylinder.scaling.z = value;
-    });
-
-	var heightCylinderSlider = new Slider("heightCylinderSlider");
-	heightCylinderSlider.minimum = 0.1;
-	heightCylinderSlider.maximum = 2.0;
-	heightCylinderSlider.name = "Height Cylinder:"
-	heightCylinderSlider.height = "20px";
-	heightCylinderSlider.onValueChangedObservable.add(function(value) {
-		cylinder.scaling.y = value;
-    });
-
-	// GUI: icosphere
-	const icosphereUI = new StackPanel("icosphere UI");
-	icosphereUI.background = "black";
-	icosphereUI.height = "80px";
-	icosphereUI.width = "120px";
-	icosphereUI.alpha = .5;
-
-	const diameterIcosphereSlider = new Slider("diameterIcosphereSlider");
-	diameterIcosphereSlider.minimum = 0.1;
-	diameterIcosphereSlider.maximum = 2.0;
-	diameterIcosphereSlider.name = "Diameter icosphere:"
-	diameterIcosphereSlider.height = "20px";
-	diameterIcosphereSlider.onValueChangedObservable.add(function(value) {
-		icosphere.scaling.x = value;
-		icosphere.scaling.y = value;
-		icosphere.scaling.z = value;
-    });
-
-	var subdivisionsSlider = new Slider("subdivisionsSlider");
-	subdivisionsSlider.minimum = 1;
-	subdivisionsSlider.maximum = 10;
-	subdivisionsSlider.name = "subdivisions Cylinder:"
-	subdivisionsSlider.height = "20px";
-	subdivisionsSlider.onValueChangedObservable.add(function(value) {
-		icosphere.dispose();
-		icosphere = MeshBuilder.CreateIcoSphere("IcoSphere", {subdivisions: value}, scene);
-		icosphere.position.set(-2, 0, 0);
-		icosphere.isPickable = true;
-    });
-
-    gui.addControl(planeUI);
-	planeUI.linkWithMesh(plane);
-	planeUI.addControl(widthSlider);
-	planeUI.addControl(heightSlider);
-	planeUI.addControl(depthSlider);
-	planeUI.isVisible = false;
-
+	gui.addControl(planeUI);
 	gui.addControl(cylinderUI);
-	cylinderUI.linkWithMesh(cylinder);
-	cylinderUI.addControl(diameterCylinderSlider);
-	cylinderUI.addControl(heightCylinderSlider);
-	cylinderUI.isVisible = false;
-
 	gui.addControl(icosphereUI);
-	icosphereUI.linkWithMesh(icosphere);
-	icosphereUI.addControl(diameterIcosphereSlider);
-	icosphereUI.addControl(subdivisionsSlider);
-	icosphereUI.isVisible = false;
 
+	planeUI.linkWithMesh(plane);
+	cylinderUI.linkWithMesh(cylinder);
+	icosphereUI.linkWithMesh(icosphere);
 
 	scene.onPointerDown = ((event, object) => {
 		const name = object.pickedMesh?.name;
